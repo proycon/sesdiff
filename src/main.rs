@@ -43,7 +43,7 @@ fn main() {
     for (i, line) in stdin.lock().lines().enumerate() {
         if let Ok(line) = line {
             let fields: Vec<&str> = line.split("\t").collect();
-            if fields.len() == 2 {
+            if fields.len() >= 2 {
                 let left = if args.is_present("suffix") {
                     //operate on reverse string
                     Cow::from(fields[0].to_owned().chars().rev().collect::<String>())
@@ -100,11 +100,19 @@ fn main() {
                         }
                     }
                 }
-                println!("\t{}",distance);
+                if fields.len() >= 2 {
+                    //retain the rest of the input columns as well
+                    print!("\t{}",distance);
+                    for j in 2..fields.len() {
+                        print!("\t{}",fields[j]);
+                    }
+                    println!();
+                } else {
+                    println!("\t{}",distance);
+                }
             } else {
-                eprintln!("Unable to process line {}, expected two columns", i);
+                eprintln!("Unable to process line {}, expected two tab-separated columns", i+1);
             }
         }
     }
 }
-

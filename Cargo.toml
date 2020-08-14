@@ -1,6 +1,6 @@
 [package]
 name = "sesdiff"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Maarten van Gompel <proycon@anaproy.nl>"]
 description = "Generates a shortest edit script (Myers' diff algorithm) to indicate how to get from the strings in column A to the strings in column B. Also provides the edit distance (levenshtein)."
 homepage = "https://github.com/proycon/sesdiff/"
