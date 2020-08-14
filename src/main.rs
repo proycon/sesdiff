@@ -43,7 +43,9 @@ fn main() {
     for (i, line) in stdin.lock().lines().enumerate() {
         if let Ok(line) = line {
             let fields: Vec<&str> = line.split("\t").collect();
-            if fields.len() >= 2 {
+            if fields.len() == 1 && fields[0].is_empty() {
+                println!();
+            } if fields.len() >= 2 {
                 let left = if args.is_present("suffix") {
                     //operate on reverse string
                     Cow::from(fields[0].to_owned().chars().rev().collect::<String>())
