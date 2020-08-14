@@ -16,7 +16,7 @@ pub fn printeditstring(s: &str, op: char, suffix: bool) {
 
 fn main() {
     let args = App::new("sesdiff")
-        .version("0.1")
+        .version("0.1.1")
         .author("Maarten van Gompel (proycon) <proycon@anaproy.nl>")
         .about("Generates a shortest edit script (Myers' diff algorithm) to indicate how to get from the strings in column 1 to the strings in column 2. Also provides the edit distance.")
         //snippet hints --> addargb,addargs,addargi,addargf,addargpos
@@ -59,7 +59,7 @@ fn main() {
                 print!("{}\t{}\t", fields[0], fields[1]);
                 let mut prev: isize = 0;
                 let mut distance = 0;
-                let mut abort_at = 0;
+                let mut abort_at = None;
                 if args.is_present("suffix") || args.is_present("prefix") {
                     let mut tail = 0;
                     for chunk in diffchunks.iter() {
@@ -69,10 +69,10 @@ fn main() {
                             tail = 0;
                         }
                     }
-                    abort_at = diffchunks.len() - tail;
+                    abort_at = Some(diffchunks.len() - tail);
                 }
                 for (i, chunk) in diffchunks.iter().enumerate() {
-                    if abort_at != 0 && i == abort_at {
+                    if abort_at.is_some() && i == abort_at.unwrap() {
                         break;
                     }
                     match chunk {
