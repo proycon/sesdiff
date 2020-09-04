@@ -58,7 +58,7 @@ pidieron        pedir           -[eron]+[r]=[di]-[i]+[e]   6
 
 There is also a ``--prefix`` option that strips common suffixes.
 
-Use the ``--abstract`` parameter to get slightly more abstract edit script that refer to the length of unchanged parts
+Use the ``--abstract`` parameter to get a slightly more abstract edit script that refers to the length of unchanged parts
 rather than their contents. You would then get:
 
 ```
