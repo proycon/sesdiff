@@ -39,6 +39,8 @@ pidieron        pedir      =[p]-[i]+[e]=[di]-[eron]+[r]    6
 By default the full edit script will be provided in a simple language:
 
 * ``=[]`` - The text between brackets is identical in strings A and B
+    * ``=[#n]`` - If you use the ``abstract`` parameter, this will be usde instead, where ``n`` represents a number
+      indicating the length of text between  that is identical in strings A and B
 * ``-[]`` - The text between brackets is removed to get to string B
 * ``+[]`` - The text between brackets is added to get to string B
 

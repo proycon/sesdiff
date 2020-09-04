@@ -14,6 +14,14 @@ pub fn printeditstring(s: &str, op: char, suffix: bool) {
     }
 }
 
+pub fn printeditstringlength(s: &str, op: char, suffix: bool) {
+    if suffix {
+        print!("{}[#{}]", op, s.to_owned().chars().count());
+    } else {
+        print!("{}[#{}]", op, s.len());
+    }
+}
+
 fn main() {
     let args = App::new("sesdiff")
         .version("0.1.1")
@@ -34,6 +42,11 @@ fn main() {
             .long("nosub")
             .short("S")
             .help("Do not count substittutions/transpositions in the edit distance")
+            )
+        .arg(Arg::with_name("abstract")
+            .long("abstract")
+            .short("a")
+            .help("Attempt to generate more abstract edit scripts by not explicitly registering unchanged parts, but referring to them by their length only")
             )
         .get_matches();
 
@@ -79,7 +92,11 @@ fn main() {
                     }
                     match chunk {
                         Chunk::Equal(s) => {
-                            printeditstring(s, '=', args.is_present("suffix"));
+                            if args.is_present("abstract") {
+                                printeditstringlength(s, '=', args.is_present("suffix"));
+                            } else {
+                                printeditstring(s, '=', args.is_present("suffix"));
+                            }
                             prev = 0;
                         }
                         Chunk::Delete(s) => {
