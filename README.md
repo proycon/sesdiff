@@ -39,7 +39,7 @@ pidieron        pedir      =[p]-[i]+[e]=[di]-[eron]+[r]    6
 By default the full edit script will be provided in a simple language:
 
 * ``=[]`` - The text between brackets is identical in strings A and B
-    * ``=[#n]`` - If you use the ``abstract`` parameter, this will be usde instead, where ``n`` represents a number
+    * ``=[#n]`` - If you use the ``--abstract`` parameter, this will be used instead, where ``n`` represents a number
       indicating the length of text between  that is identical in strings A and B
 * ``-[]`` - The text between brackets is removed to get to string B
 * ``+[]`` - The text between brackets is added to get to string B
@@ -57,6 +57,13 @@ pidieron        pedir           -[eron]+[r]=[di]-[i]+[e]   6
 ```
 
 There is also a ``--prefix`` option that strips common suffixes.
+
+Use the ``--abstract`` parameter to get slightly more abstract edit script that refer to the length of unchanged parts
+rather than their contents. You would then get:
+
+```
+pidieron        pedir           -[eron]+[r]=[#2]-[i]+[e]   6
+```
 
 
 # License
