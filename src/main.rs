@@ -24,7 +24,7 @@ pub fn printeditstringlength(s: &str, op: char, suffix: bool) {
 
 fn main() {
     let args = App::new("sesdiff")
-        .version("0.1.1")
+        .version("0.1.5") //also adapt in cargo.toml
         .author("Maarten van Gompel (proycon) <proycon@anaproy.nl>")
         .about("Generates a shortest edit script (Myers' diff algorithm) to indicate how to get from the strings in column 1 to the strings in column 2. Also provides the edit distance.")
         //snippet hints --> addargb,addargs,addargi,addargf,addargpos
@@ -50,15 +50,13 @@ fn main() {
             )
         .get_matches();
 
-    //hints: matches.is_present() , matches.value_of()
-
     let stdin = std::io::stdin();
     for (i, line) in stdin.lock().lines().enumerate() {
         if let Ok(line) = line {
             let fields: Vec<&str> = line.split("\t").collect();
-            if fields.len() == 1 && fields[0].is_empty() {
+            if line.trim().is_empty() {
                 println!();
-            } if fields.len() >= 2 {
+            } else if fields.len() >= 2 {
                 let left = if args.is_present("suffix") {
                     //operate on reverse string
                     Cow::from(fields[0].to_owned().chars().rev().collect::<String>())
