@@ -25,7 +25,7 @@ pub fn printeditstringlength(s: &str, op: char, suffix: bool) {
 
 fn main() {
     let args = App::new("sesdiff")
-        .version("0.2.0") //also adapt in cargo.toml
+        .version("0.3.0") //also adapt in cargo.toml
         .author("Maarten van Gompel (proycon) <proycon@anaproy.nl>")
         .about("Generates a shortest edit script (Myers' diff algorithm) to indicate how to get from the strings in column 1 to the strings in column 2. Also provides the edit distance.")
         //snippet hints --> addargb,addargs,addargi,addargf,addargpos
