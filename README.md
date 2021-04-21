@@ -4,7 +4,7 @@
 
 ## Description
 
-This is a small and fast command line tool that reads a two-column tab separated input from standard input and computes the shortest edit script (Myers' diff algorithm) to go from the string in column A to the string in column B. It also computed the edit distance (aka levenshtein distance).
+This is a small and fast command line tool and Rust library that reads a two-column tab separated input from standard input and computes the shortest edit script (Myers' diff algorithm) to go from the string in column A to the string in column B. It also computed the edit distance (aka levenshtein distance).
 
 It was written to build lemmatisers.
 
