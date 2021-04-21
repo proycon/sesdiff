@@ -6,7 +6,10 @@ use std::str::FromStr;
 use std::borrow::{Borrow,ToOwned};
 use dissimilar::{diff,Chunk};
 
+#[derive(Debug)]
 pub struct ParseError(String);
+
+#[derive(Debug)]
 pub struct ApplyError(String);
 
 #[derive(Debug)]
@@ -210,6 +213,11 @@ impl EditScript<String> {
     }
 }
 
+impl<T> EditScript<T> {
+    pub fn len(&self) -> usize {
+        self.instructions.len()
+    }
+}
 
 impl<T> EditInstruction<T> {
     pub fn is_change(&self) -> bool {
@@ -221,6 +229,7 @@ impl<T> EditInstruction<T> {
             EditInstruction::IdentityOptions(_) => false,
         }
     }
+
 }
 
 #[derive(Copy,Clone,Debug,PartialEq)]
@@ -353,7 +362,7 @@ pub fn shortest_edit_script_suffix(source: &str, target: &str, generic: bool, al
     }
 }
 
-trait ApplyEditScript {
+pub trait ApplyEditScript {
     fn apply_to(self, input: &str) -> Result<String,ApplyError>;
 }
 
