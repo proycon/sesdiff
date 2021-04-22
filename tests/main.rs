@@ -109,14 +109,20 @@ fn test0011_noapply() {
 }
 
 #[test]
-fn test0007_apply_infix() {
+fn test0012_apply_infix() {
     let editscript: EditScript<String> = EditScript::from_str("-[a]+[e]").unwrap();
     assert_eq!(format!("{}",editscript.apply_to("hahaha", Some(Mode::Infix)).unwrap() ),"hehehe");
 }
 
 #[test]
-fn test0008_apply_infix_context() {
+fn test0013_apply_infix_context() {
     let editscript: EditScript<String> = EditScript::from_str("=[l]-[a]+[o]").unwrap();
     assert_eq!(format!("{}",editscript.apply_to("halaha", Some(Mode::Infix)).unwrap() ),"haloha");
+}
+
+#[test]
+fn test0014_apply_deleteoptions() {
+    let editscript: EditScript<String> = EditScript::from_str("-[i|a|o]+[e]").unwrap();
+    assert_eq!(format!("{}",editscript.apply_to("hihaho", Some(Mode::Infix)).unwrap() ),"hehehe");
 }
 

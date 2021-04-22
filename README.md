@@ -92,11 +92,19 @@ $ cat input3.tsv
 hahaha       -[a]+[o]
 
 $ sesdiff --infix --apply < input3.tsv
-
+hahaha       -[a]+[o]	hohoho
 ```
 
+In ``--apply`` mode, you can also make edit scripts applicable to multiple patterns by using the ``|`` operator. This is
+only allowed for deletions (``-[]``) and equality checks (``=[]``):
 
+```
+$ cat input4.tsv
+hihaho       -[a|i|o]+[e]
 
+$ sesdiff --infix --apply < input3.tsv
+hihaho       -[a|i|o]+[e]	hehehe
+```
 
 # License
 

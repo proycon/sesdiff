@@ -585,6 +585,7 @@ impl ApplyEditScript for EditScript<&str> {
                         }
                     },
                     EditInstruction::IdentityOptions(prefixes) => {
+                        matches = false;
                         for prefix in prefixes {
                             if let Ok(matchchars) = instruction_applies(prefix, input, &tail, tailchars) {
                                 if head.is_none() { head = Some(String::new()) }; //init
@@ -596,8 +597,10 @@ impl ApplyEditScript for EditScript<&str> {
                                 break;
                             }
                         }
+                        if !matches { return Err(ApplyError::NoMatch); }
                     }
                     EditInstruction::DeletionOptions(prefixes) => {
+                        matches = false;
                         for prefix in prefixes {
                             if let Ok(matchchars) = instruction_applies(prefix, input, &tail, tailchars) {
                                 if tail.is_none() { tail = Some(input.to_string()) }; //clone
@@ -606,6 +609,7 @@ impl ApplyEditScript for EditScript<&str> {
                                 break;
                             }
                         }
+                        if !matches { return Err(ApplyError::NoMatch); }
                     },
                     EditInstruction::InsertionOptions(_) => {
                         return Err(ApplyError::WithMessage(format!("Edit script has multiple insertion options and is therefor ambiguous, unable to apply")));
