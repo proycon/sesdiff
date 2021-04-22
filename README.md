@@ -102,7 +102,7 @@ only allowed for deletions (``-[]``) and equality checks (``=[]``):
 $ cat input4.tsv
 hihaho       -[a|i|o]+[e]
 
-$ sesdiff --infix --apply < input3.tsv
+$ sesdiff --infix --apply < input4.tsv
 hihaho       -[a|i|o]+[e]	hehehe
 ```
 
