@@ -85,21 +85,27 @@ fn test0007_apply() {
 }
 
 #[test]
-fn test0008_apply_suffix() {
+fn test0008_apply() {
+    let editscript: EditScript<String> = EditScript::from_str("=[p]-[i]+[e]=[di]-[eron]+[r]").unwrap();
+    assert_eq!(format!("{}",editscript.apply_to("pidieron").unwrap() ),"pedir");
+}
+
+#[test]
+fn test0009_apply_suffix() {
     let mut editscript: EditScript<String> = EditScript::from_str("-[on]").unwrap();
     editscript.mode = Mode::Suffix;
     assert_eq!(format!("{}",editscript.apply_to("hablaron").unwrap() ),"hablar");
 }
 
 #[test]
-fn test0009_apply_suffix2() {
+fn test0010_apply_suffix2() {
     let mut editscript: EditScript<String> = EditScript::from_str("-[eron]+[r]=[#2]-[i]+[e]").unwrap();
     editscript.mode = Mode::Suffix;
     assert_eq!(format!("{}",editscript.apply_to("pidieron").unwrap() ),"pedir");
 }
 
 #[test]
-fn test0010_noapply() {
+fn test0011_noapply() {
     let editscript: EditScript<String> = EditScript::from_str("-[ver]=[sta]+[a]=[n]-[d]").unwrap();
     assert!(editscript.apply_to("nachtvlinder").is_err() );
 }

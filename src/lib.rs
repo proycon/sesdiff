@@ -381,6 +381,10 @@ impl ApplyEditScript for EditScript<&str> {
             let mut tail = String::new();
             for instruction in self.instructions.iter() {
                 let headchars = head.chars().count();
+                /*
+                eprintln!("DEBUG: Instruction: {}", instruction);
+                eprintln!("              Head: {}", head);
+                eprintln!("              Tail: {}", tail);*/
                 match instruction {
                     EditInstruction::Deletion(suffix) => {
                         let suffixchars = suffix.chars().count();
@@ -389,12 +393,12 @@ impl ApplyEditScript for EditScript<&str> {
                         }
                         let foundsuffix: String = head.chars().skip(headchars - suffixchars).take(suffixchars).collect();
                         if foundsuffix.as_str() != *suffix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and remove suffix {})", suffix)));
+                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and remove suffix '{}', found '{}' instead)", suffix, foundsuffix)));
                         }
                         head = head.chars().take(headchars - suffixchars).collect();
                     },
                     EditInstruction::Insertion(s) => {
-                        head += s;
+                        tail.insert_str(0, s);
                     },
                     EditInstruction::GenericIdentity(keeplength) => {
                         let keeplength = *keeplength as usize;
@@ -458,16 +462,20 @@ impl ApplyEditScript for EditScript<&str> {
             let mut head = String::new();
             for instruction in self.instructions.iter() {
                 let tailchars = tail.chars().count();
+                /*eprintln!("DEBUG: Instruction: {}", instruction);
+                eprintln!("              Head: {}", head);
+                eprintln!("              Tail: {}", tail);*/
                 match instruction {
                     EditInstruction::Deletion(prefix) => {
                         let prefixchars = prefix.chars().count();
                         if prefixchars > tailchars {
                             return Err(ApplyError(format!("Edit script does not match current word, prefix is longer than head (unable to remove prefix {})", prefix)));
                         }
-                        if &head[..prefixchars] != *prefix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and remove prefix {})", prefix)));
+                        let foundprefix = &tail[..prefixchars];
+                        if foundprefix != *prefix {
+                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and remove prefix '{}', found '{}')", prefix, foundprefix)));
                         }
-                        head.extend(tail.drain(..prefixchars));
+                        tail.drain(..prefixchars);
                     },
                     EditInstruction::Insertion(s) => {
                         head += s;
@@ -484,8 +492,9 @@ impl ApplyEditScript for EditScript<&str> {
                         if prefixchars > tailchars {
                             return Err(ApplyError(format!("Edit script does not match current word, prefix is longer than head (unable to keep prefix {})", prefix)));
                         }
-                        if &head[..prefixchars] != *prefix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and keep prefix {})", prefix)));
+                        let foundprefix = &tail[..prefixchars];
+                        if foundprefix != *prefix {
+                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and keep prefix '{}', found '{}')", prefix, foundprefix)));
                         }
                         head.extend(tail.drain(..prefixchars));
                     },
@@ -495,7 +504,8 @@ impl ApplyEditScript for EditScript<&str> {
                             if prefixchars > tailchars {
                                 continue; //no match
                             }
-                            if &head[..prefixchars] == *prefix {
+                            let foundprefix = &tail[..prefixchars];
+                            if foundprefix == *prefix {
                                 //match, apply
                                 head.extend(tail.drain(..prefixchars));
                                 break;
@@ -508,9 +518,10 @@ impl ApplyEditScript for EditScript<&str> {
                             if prefixchars > tailchars {
                                 continue; //no match
                             }
-                            if &head[..prefixchars] == *prefix {
+                            let foundprefix = &tail[..prefixchars];
+                            if foundprefix == *prefix {
                                 //match, apply
-                                head.extend(tail.drain(..prefixchars));
+                                tail.drain(..prefixchars);
                                 break;
                             }
                         }
