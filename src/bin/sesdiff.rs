@@ -2,6 +2,7 @@ extern crate clap;
 extern crate dissimilar;
 
 use std::io::BufRead;
+use std::str::FromStr;
 use clap::{Arg, App};
 
 use sesdiff::*;
@@ -49,6 +50,10 @@ fn main() {
             .short("a")
             .help("Attempt to generate more abstract edit scripts by not explicitly registering unchanged parts, but referring to them by their length only")
             )
+        .arg(Arg::with_name("apply")
+            .long("apply")
+            .short("A")
+            .help("Apply mode; apply the edit scripts from the second column to the strings in the first column"))
         .get_matches();
 
     let stdin = std::io::stdin();
@@ -66,12 +71,27 @@ fn main() {
                     Mode::Normal
                 };
                 print!("{}\t{}\t", fields[0], fields[1]);
-                if mode == Mode::Suffix {
-                    let editscript = shortest_edit_script_suffix(&fields[0], &fields[1], args.is_present("abstract"), !args.is_present("nosubstitutions"));
-                    print!("\t{}\t{}",editscript, editscript.distance);
+                if args.is_present("apply") {
+                    match EditScript::<String>::from_str(&fields[1]) {
+                        Ok(mut editscript)  => {
+                            if mode == Mode::Suffix {
+                                editscript.mode = Mode::Suffix;
+                            }
+                            match editscript.apply_to(&fields[0]) {
+                                Ok(result) => print!("\t{}", result),
+                                Err(err) => eprintln!("ERROR: {:?}", err)
+                           }
+                        },
+                        Err(err) => eprintln!("ERROR: {:?}", err)
+                    }
                 } else {
-                    let editscript = shortest_edit_script(&fields[0], &fields[1], args.is_present("prefix"), args.is_present("abstract"), !args.is_present("nosubstitutions"));
-                    print!("\t{}\t{}",editscript, editscript.distance);
+                    if mode == Mode::Suffix {
+                        let editscript = shortest_edit_script_suffix(&fields[0], &fields[1], args.is_present("abstract"), !args.is_present("nosubstitutions"));
+                        print!("\t{}\t{}",editscript, editscript.distance);
+                    } else {
+                        let editscript = shortest_edit_script(&fields[0], &fields[1], args.is_present("prefix"), args.is_present("abstract"), !args.is_present("nosubstitutions"));
+                        print!("\t{}\t{}",editscript, editscript.distance);
+                    }
                 }
                 if fields.len() >= 2 {
                     //retain the rest of the input columns as well

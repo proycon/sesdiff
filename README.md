@@ -67,7 +67,19 @@ rather than their contents. You would then get:
 ```
 pidieron        pedir           -[eron]+[r]=[#2]-[i]+[e]   6
 ```
+Sesdiff can also apply edit scripts to our input, use the ``--apply`` flag and feed the tool tab separated input with
+a string in the first column and an edit script in the second, as in the the following example ``input2.tsv``:
 
+```
+pidieron        -[eron]+[r]=[di]-[i]+[e]
+```
+
+Run sesdiff as follows and a third column will be added with the solution:
+
+```
+$ sesdiff --suffix --apply < input2.tsv
+pidieron        -[eron]+[r]=[di]-[i]+[e]                pedir
+```
 
 # License
 
