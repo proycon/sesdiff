@@ -54,6 +54,11 @@ fn main() {
             .long("apply")
             .short("A")
             .help("Apply mode; apply the edit scripts from the second column to the strings in the first column"))
+        .arg(Arg::with_name("infix")
+            .long("infix")
+            .short("i")
+            .help("Infix mode, used only with --apply: searches all occurrences of the editscript in the string and replaces them all")
+            )
         .get_matches();
 
     let stdin = std::io::stdin();
@@ -67,17 +72,16 @@ fn main() {
                     Mode::Suffix
                 } else if args.is_present("prefix") {
                     Mode::Prefix
+                } else if args.is_present("infix") {
+                    Mode::Infix
                 } else {
                     Mode::Normal
                 };
                 print!("{}\t{}\t", fields[0], fields[1]);
                 if args.is_present("apply") {
                     match EditScript::<String>::from_str(&fields[1]) {
-                        Ok(mut editscript)  => {
-                            if mode == Mode::Suffix {
-                                editscript.mode = Mode::Suffix;
-                            }
-                            match editscript.apply_to(&fields[0], None) {
+                        Ok(editscript)  => {
+                            match editscript.apply_to(&fields[0], Some(mode)) {
                                 Ok(result) => print!("\t{}", result),
                                 Err(err) => eprintln!("ERROR: {:?}", err)
                            }

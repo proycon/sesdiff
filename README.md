@@ -59,7 +59,8 @@ pidieron        pedir           -[eron]+[r]=[di]-[i]+[e]   6
 говорим         говорить        -[м]+[ть]                  3
 ```
 
-There is also a ``--prefix`` option that strips common suffixes.
+Note that the edit scripts in suffix mode are formulated differently than in normal mode (they start from the right
+too). There is also a ``--prefix`` option that strips common suffixes.
 
 Use the ``--abstract`` parameter to get a slightly more abstract edit script that refers to the length of unchanged parts
 rather than their contents. You would then get:
@@ -71,6 +72,7 @@ Sesdiff can also apply edit scripts to our input, use the ``--apply`` flag and f
 a string in the first column and an edit script in the second, as in the the following example ``input2.tsv``:
 
 ```
+$ cat input2.tsv
 pidieron        -[eron]+[r]=[di]-[i]+[e]
 ```
 
@@ -80,6 +82,21 @@ Run sesdiff as follows and a third column will be added with the solution:
 $ sesdiff --suffix --apply < input2.tsv
 pidieron        -[eron]+[r]=[di]-[i]+[e]                pedir
 ```
+
+When using ``--apply``, you can also make use of an extra ``--infix`` parameter to indicate that an edit script must be
+attempted to be matched with any infix in the string, including multiple. Consider the following example that replaces
+all letters *a* with *o*:
+
+```
+$ cat input3.tsv
+hahaha       -[a]+[o]
+
+$ sesdiff --infix --apply < input3.tsv
+
+```
+
+
+
 
 # License
 

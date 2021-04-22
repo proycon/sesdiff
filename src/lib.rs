@@ -412,13 +412,34 @@ impl ApplyEditScript for EditScript<&str> {
 
             //iterate over the input attempting to match at each stage
 
+            let mut head: Option<String> = None;
+
+            let mut begin = 0;
+            let mut skip = 0;
+
             for (i, _) in input.char_indices() {
+                if skip > 0 {
+                    skip -= 1;
+                    continue;
+                }
                 if let Ok(result) = self.apply_to(&input[i..], Some(Mode::Normal)) { //we override the mode
-                    return Ok(result.to_string());
+                    if head.is_none() { head = Some(String::new()) }; //init
+                    skip = result.chars().count();
+                    head.as_mut().map( |h| {
+                        if i > 0 && i > begin {
+                            *h += &input[begin..i];
+                        }
+                        *h += result.as_str()
+                    });
+                    begin = i + skip;
                 }
             }
 
-            Err(ApplyError::NoMatch)
+            if let Some(result) = head {
+                Ok(result)
+            } else {
+                Err(ApplyError::NoMatch)
+            }
         } else if mode == Mode::Suffix {
             /////////////////////////////////// SUFFIX MODE
             let mut head: String = input.to_string();

@@ -107,3 +107,10 @@ fn test0011_noapply() {
     let editscript: EditScript<String> = EditScript::from_str("-[ver]=[sta]+[a]=[n]-[d]").unwrap();
     assert!(editscript.apply_to("nachtvlinder", None).is_err() );
 }
+
+#[test]
+fn test0007_apply_infix() {
+    let editscript: EditScript<String> = EditScript::from_str("-[a]+[e]").unwrap();
+    assert_eq!(format!("{}",editscript.apply_to("hahaha", Some(Mode::Infix)).unwrap() ),"hehehe");
+}
+
