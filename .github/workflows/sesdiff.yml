@@ -52,7 +52,7 @@ jobs:
             Building and testing sesdiff by ${{ github.actor }} on ${{ runner.os }}: FAILED
 
       - name: Notify IRC of success
-        if: ${{ steps.test.outcome == "success"}}
+        if: ${{ steps.test.outcome == "success" }}
         uses: Gottox/irc-message-action@v1
         with:
           server: irc.uvt.nl
