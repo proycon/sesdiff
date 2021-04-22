@@ -422,7 +422,7 @@ impl ApplyEditScript for EditScript<&str> {
                     skip -= 1;
                     continue;
                 }
-                if let Ok(result) = self.apply_to(&input[i..], Some(Mode::Normal)) { //we override the mode
+                if let Ok(result) = self.apply_to(&input[i..], Some(Mode::Normal)) { //we override the mode and recurse for each position
                     if head.is_none() { head = Some(String::new()) }; //init
                     skip = result.chars().count();
                     head.as_mut().map( |h| {
@@ -435,8 +435,11 @@ impl ApplyEditScript for EditScript<&str> {
                 }
             }
 
-            if let Some(result) = head {
-                Ok(result)
+            if let Some(mut head) = head.take() {
+                if begin < input.chars().count() {
+                    head += &input[begin..];
+                }
+                Ok(head)
             } else {
                 Err(ApplyError::NoMatch)
             }

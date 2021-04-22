@@ -114,3 +114,9 @@ fn test0007_apply_infix() {
     assert_eq!(format!("{}",editscript.apply_to("hahaha", Some(Mode::Infix)).unwrap() ),"hehehe");
 }
 
+#[test]
+fn test0008_apply_infix_context() {
+    let editscript: EditScript<String> = EditScript::from_str("=[l]-[a]+[o]").unwrap();
+    assert_eq!(format!("{}",editscript.apply_to("halaha", Some(Mode::Infix)).unwrap() ),"haloha");
+}
+
