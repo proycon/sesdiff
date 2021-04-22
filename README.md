@@ -1,4 +1,7 @@
 [![Crate](https://img.shields.io/crates/v/sesdiff.svg)](https://crates.io/crates/sesdiff)
+[![GitHub build](https://github.com/proycon/sesdiff/actions/workflows/sesdiff.yml/badge.svg?branch=master)](https://github.com/proycon/sesdiff/actions/)
+[![GitHub release](https://img.shields.io/github/release/proycon/sesdiff.svg)](https://GitHub.com/proycon/sesdiff/releases/)
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
 # sesdiff: Shortest Edit Script Diff
 
