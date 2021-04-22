@@ -10,7 +10,10 @@ use dissimilar::{diff,Chunk};
 pub struct ParseError(String);
 
 #[derive(Debug)]
-pub struct ApplyError(String);
+pub enum ApplyError {
+    NoMatch,
+    WithMessage(String)
+}
 
 #[derive(Debug)]
 pub struct EditScript<T> {
@@ -236,7 +239,11 @@ impl<T> EditInstruction<T> {
 pub enum Mode {
     Normal,
     Suffix,
-    Prefix
+    Prefix,
+
+    ///Infix mode is only used when applying an edit script and means it can apply to any subpart (infix) of
+    ///the string and may also apply multiple times.
+    Infix,
 }
 
 /// Compute the shorted edit script (Myers' diff) between source and target
@@ -363,19 +370,56 @@ pub fn shortest_edit_script_suffix(source: &str, target: &str, generic: bool, al
 }
 
 pub trait ApplyEditScript {
-    fn apply_to(self, input: &str) -> Result<String,ApplyError>;
+    fn apply_to(&self, input: &str, mode: Option<Mode>) -> Result<String,ApplyError>;
 }
 
 impl ApplyEditScript for EditScript<String> {
-    fn apply_to(self, input: &str) -> Result<String,ApplyError> {
-        self.as_ref().apply_to(input)
+    fn apply_to(&self, input: &str, mode: Option<Mode>) -> Result<String,ApplyError> {
+        self.as_ref().apply_to(input, mode)
     }
 }
 
-impl ApplyEditScript for EditScript<&str> {
-    fn apply_to(self, input: &str) -> Result<String,ApplyError> {
+///auxiliary internal function for apply_to() in normal/prefix mode
+fn instruction_applies(instructioncontent: &str, input: &str, head: &Option<String>, tail: &Option<String>, tailchars: usize) -> Result<usize,ApplyError> {
+    let instructionlength = instructioncontent.chars().count();
+    if instructionlength > tailchars {
+        return Err(ApplyError::NoMatch);
+        //return Err(ApplyError(format!("Edit script does not match current word, prefix is longer than head (unable to remove prefix {})", prefix)));
+    }
+    let refcontent = if let Some(tail) = tail {
+        &tail[..instructionlength]
+    } else {
+        &input[..instructionlength]
+    };
+    if refcontent != instructioncontent {
+        return Err(ApplyError::NoMatch);
+    } else {
+        Ok(instructionlength)
+    }
+}
 
-        if self.mode == Mode::Suffix {
+
+impl ApplyEditScript for EditScript<&str> {
+    fn apply_to(&self, input: &str, mode: Option<Mode>) -> Result<String,ApplyError> {
+        let mode = if let Some(mode) = mode {
+            mode
+        } else {
+            self.mode
+        };
+
+        if mode == Mode::Infix {
+            /////////////////////////////////// INFIX MODE
+
+            //iterate over the input attempting to match at each stage
+
+            for (i, _) in input.char_indices() {
+                if let Ok(result) = self.apply_to(&input[i..], Some(Mode::Normal)) { //we override the mode
+                    return Ok(result.to_string());
+                }
+            }
+
+            Err(ApplyError::NoMatch)
+        } else if mode == Mode::Suffix {
             /////////////////////////////////// SUFFIX MODE
             let mut head: String = input.to_string();
             let mut tail = String::new();
@@ -389,11 +433,11 @@ impl ApplyEditScript for EditScript<&str> {
                     EditInstruction::Deletion(suffix) => {
                         let suffixchars = suffix.chars().count();
                         if suffixchars > headchars {
-                            return Err(ApplyError(format!("Edit script does not match current word, suffix is longer than head (unable to remove suffix {})", suffix)));
+                            return Err(ApplyError::WithMessage(format!("Edit script does not match current word, suffix is longer than head (unable to remove suffix {})", suffix)));
                         }
                         let foundsuffix: String = head.chars().skip(headchars - suffixchars).take(suffixchars).collect();
                         if foundsuffix.as_str() != *suffix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and remove suffix '{}', found '{}' instead)", suffix, foundsuffix)));
+                            return Err(ApplyError::WithMessage(format!("Edit script does not match current word (unable to find and remove suffix '{}', found '{}' instead)", suffix, foundsuffix)));
                         }
                         head = head.chars().take(headchars - suffixchars).collect();
                     },
@@ -403,7 +447,7 @@ impl ApplyEditScript for EditScript<&str> {
                     EditInstruction::GenericIdentity(keeplength) => {
                         let keeplength = *keeplength as usize;
                         if keeplength > headchars {
-                            return Err(ApplyError(format!("Edit script does not match current word, length to keep is longer than head")));
+                            return Err(ApplyError::WithMessage(format!("Edit script does not match current word, length to keep is longer than head")));
                         }
                         tail = head.chars().skip(headchars - keeplength).take(keeplength).collect::<String>() + tail.as_str();
                         head = head.chars().take(headchars - keeplength).collect();
@@ -411,11 +455,11 @@ impl ApplyEditScript for EditScript<&str> {
                     EditInstruction::Identity(suffix) => {
                         let suffixchars = suffix.chars().count();
                         if suffixchars > headchars {
-                            return Err(ApplyError(format!("Edit script does not match current word, suffix is longer than head (unable to keep suffix {})", suffix)));
+                            return Err(ApplyError::WithMessage(format!("Edit script does not match current word, suffix is longer than head (unable to keep suffix {})", suffix)));
                         }
                         let foundsuffix: String = head.chars().skip(headchars - suffixchars).take(suffixchars).collect();
                         if foundsuffix.as_str() != *suffix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and keep suffix {})", suffix)));
+                            return Err(ApplyError::WithMessage(format!("Edit script does not match current word (unable to find and keep suffix {})", suffix)));
                         }
                         tail = head.chars().skip(headchars - suffixchars).take(suffixchars).collect::<String>() + tail.as_str();
                         head = head.chars().take(headchars - suffixchars).collect();
@@ -450,7 +494,7 @@ impl ApplyEditScript for EditScript<&str> {
                         }
                     },
                     EditInstruction::InsertionOptions(_) => {
-                        return Err(ApplyError(format!("Edit script has multiple insertion options and is therefor ambiguous, unable to apply")));
+                        return Err(ApplyError::WithMessage(format!("Edit script has multiple insertion options and is therefor ambiguous, unable to apply")));
                     },
                 }
             }
@@ -458,80 +502,99 @@ impl ApplyEditScript for EditScript<&str> {
             Ok(head)
         } else {
             /////////////////////////////////// NORMAL or PREFIX MODE
-            let mut tail: String = input.to_string();
-            let mut head = String::new();
+
+            //we use Options because we want to defer making clones and new instances until we
+            //really need to
+            let mut tail: Option<String> = Some(input.to_string());
+            let mut head: Option<String> = Some(String::new());
+
+            let mut matches = false;
+
             for instruction in self.instructions.iter() {
-                let tailchars = tail.chars().count();
+                let tailchars = if let Some(tail) = tail.as_ref() {
+                    tail.chars().count()
+                } else {
+                    input.chars().count()
+                };
                 /*eprintln!("DEBUG: Instruction: {}", instruction);
                 eprintln!("              Head: {}", head);
                 eprintln!("              Tail: {}", tail);*/
                 match instruction {
                     EditInstruction::Deletion(prefix) => {
-                        let prefixchars = prefix.chars().count();
-                        if prefixchars > tailchars {
-                            return Err(ApplyError(format!("Edit script does not match current word, prefix is longer than head (unable to remove prefix {})", prefix)));
+                        match instruction_applies(prefix, input, &head, &tail, tailchars) {
+                            Ok(matchchars) => {
+                                matches = true;
+                                if tail.is_none() { tail = Some(input.to_string()) }; //clone
+                                tail.as_mut().map(|t| t.drain(..matchchars));
+                            },
+                            Err(e) => return Err(e)
                         }
-                        let foundprefix = &tail[..prefixchars];
-                        if foundprefix != *prefix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and remove prefix '{}', found '{}')", prefix, foundprefix)));
-                        }
-                        tail.drain(..prefixchars);
                     },
                     EditInstruction::Insertion(s) => {
-                        head += s;
+                        if head.is_none() { head = Some(String::new()) }; //init
+                        head.as_mut().map(|h| *h += s);
+                        matches = true;
                     },
                     EditInstruction::GenericIdentity(keeplength) => {
                         let keeplength = *keeplength as usize;
                         if keeplength > tailchars {
-                            return Err(ApplyError(format!("Edit script does not match current word, length to keep is longer than head")));
+                            return Err(ApplyError::WithMessage(format!("Edit script does not match current word, length to keep is longer than head")));
                         }
-                        head.extend(tail.drain(..keeplength));
+                        if head.is_none() { head = Some(String::new()) }; //init
+                        if tail.is_none() { tail = Some(input.to_string()) }; //clone
+                        if let (Some(head), Some(tail)) = (head.as_mut(), tail.as_mut())  {
+                            head.extend(tail.drain(..keeplength));
+                            matches = true;
+                        } else { panic!("Can't unpack head and tail for EditInstruction::GenericIdentity") } //should never happen
                     },
                     EditInstruction::Identity(prefix) => {
-                        let prefixchars = prefix.chars().count();
-                        if prefixchars > tailchars {
-                            return Err(ApplyError(format!("Edit script does not match current word, prefix is longer than head (unable to keep prefix {})", prefix)));
+                        match instruction_applies(prefix, input, &head, &tail, tailchars) {
+                            Ok(matchchars) => {
+                                if head.is_none() { head = Some(String::new()) }; //init
+                                if tail.is_none() { tail = Some(input.to_string()) }; //clone
+                                if let (Some(head), Some(tail)) = (head.as_mut(), tail.as_mut())  {
+                                    head.extend(tail.drain(..matchchars));
+                                }
+                                matches = true;
+                            },
+                            Err(e) => return Err(e)
                         }
-                        let foundprefix = &tail[..prefixchars];
-                        if foundprefix != *prefix {
-                            return Err(ApplyError(format!("Edit script does not match current word (unable to find and keep prefix '{}', found '{}')", prefix, foundprefix)));
-                        }
-                        head.extend(tail.drain(..prefixchars));
                     },
                     EditInstruction::IdentityOptions(prefixes) => {
                         for prefix in prefixes {
-                            let prefixchars = prefix.chars().count();
-                            if prefixchars > tailchars {
-                                continue; //no match
-                            }
-                            let foundprefix = &tail[..prefixchars];
-                            if foundprefix == *prefix {
-                                //match, apply
-                                head.extend(tail.drain(..prefixchars));
+                            if let Ok(matchchars) = instruction_applies(prefix, input, &head, &tail, tailchars) {
+                                if head.is_none() { head = Some(String::new()) }; //init
+                                if tail.is_none() { tail = Some(input.to_string()) }; //clone
+                                if let (Some(head), Some(tail)) = (head.as_mut(), tail.as_mut())  {
+                                    head.extend(tail.drain(..matchchars));
+                                }
+                                matches = true;
                                 break;
                             }
                         }
                     }
                     EditInstruction::DeletionOptions(prefixes) => {
                         for prefix in prefixes {
-                            let prefixchars = prefix.chars().count();
-                            if prefixchars > tailchars {
-                                continue; //no match
-                            }
-                            let foundprefix = &tail[..prefixchars];
-                            if foundprefix == *prefix {
-                                //match, apply
-                                tail.drain(..prefixchars);
+                            if let Ok(matchchars) = instruction_applies(prefix, input, &head, &tail, tailchars) {
+                                if tail.is_none() { tail = Some(input.to_string()) }; //clone
+                                tail.as_mut().map(|t| t.drain(..matchchars));
+                                matches = true;
                                 break;
                             }
                         }
                     },
                     EditInstruction::InsertionOptions(_) => {
-                        return Err(ApplyError(format!("Edit script has multiple insertion options and is therefor ambiguous, unable to apply")));
+                        return Err(ApplyError::WithMessage(format!("Edit script has multiple insertion options and is therefor ambiguous, unable to apply")));
                     },
                 }
             }
-            Ok(head)
+            if let Some(head) = head {
+                Ok(head)
+            } else if matches {
+                Ok(String::new())
+            } else {
+                Err(ApplyError::NoMatch)
+            }
         }
     }
 }

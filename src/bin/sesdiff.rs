@@ -77,7 +77,7 @@ fn main() {
                             if mode == Mode::Suffix {
                                 editscript.mode = Mode::Suffix;
                             }
-                            match editscript.apply_to(&fields[0]) {
+                            match editscript.apply_to(&fields[0], None) {
                                 Ok(result) => print!("\t{}", result),
                                 Err(err) => eprintln!("ERROR: {:?}", err)
                            }

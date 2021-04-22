@@ -75,37 +75,35 @@ fn test0005_parse() {
 #[test]
 fn test0006_apply() {
     let editscript: EditScript<String> = EditScript::from_str("+[ver]=[sta]-[a]=[n]+[d]").unwrap();
-    assert_eq!(format!("{}",editscript.apply_to("staan").unwrap() ),"verstand");
+    assert_eq!(format!("{}",editscript.apply_to("staan", None).unwrap() ),"verstand");
 }
 
 #[test]
 fn test0007_apply() {
     let editscript: EditScript<String> = EditScript::from_str("-[ver]=[sta]+[a]=[n]-[d]").unwrap();
-    assert_eq!(format!("{}",editscript.apply_to("verstand").unwrap() ),"staan");
+    assert_eq!(format!("{}",editscript.apply_to("verstand", None).unwrap() ),"staan");
 }
 
 #[test]
 fn test0008_apply() {
     let editscript: EditScript<String> = EditScript::from_str("=[p]-[i]+[e]=[di]-[eron]+[r]").unwrap();
-    assert_eq!(format!("{}",editscript.apply_to("pidieron").unwrap() ),"pedir");
+    assert_eq!(format!("{}",editscript.apply_to("pidieron", None).unwrap() ),"pedir");
 }
 
 #[test]
 fn test0009_apply_suffix() {
     let mut editscript: EditScript<String> = EditScript::from_str("-[on]").unwrap();
-    editscript.mode = Mode::Suffix;
-    assert_eq!(format!("{}",editscript.apply_to("hablaron").unwrap() ),"hablar");
+    assert_eq!(format!("{}",editscript.apply_to("hablaron", Some(Mode::Suffix)).unwrap() ),"hablar");
 }
 
 #[test]
 fn test0010_apply_suffix2() {
     let mut editscript: EditScript<String> = EditScript::from_str("-[eron]+[r]=[#2]-[i]+[e]").unwrap();
-    editscript.mode = Mode::Suffix;
-    assert_eq!(format!("{}",editscript.apply_to("pidieron").unwrap() ),"pedir");
+    assert_eq!(format!("{}",editscript.apply_to("pidieron", Some(Mode::Suffix)).unwrap() ),"pedir");
 }
 
 #[test]
 fn test0011_noapply() {
     let editscript: EditScript<String> = EditScript::from_str("-[ver]=[sta]+[a]=[n]-[d]").unwrap();
-    assert!(editscript.apply_to("nachtvlinder").is_err() );
+    assert!(editscript.apply_to("nachtvlinder", None).is_err() );
 }
