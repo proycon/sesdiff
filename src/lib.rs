@@ -3,7 +3,7 @@ extern crate dissimilar;
 use std::fmt;
 use std::cmp::PartialEq;
 use std::str::FromStr;
-use std::borrow::{Borrow,ToOwned};
+use std::borrow::{ToOwned};
 use dissimilar::{diff,Chunk};
 
 #[derive(Debug)]
@@ -168,7 +168,7 @@ impl EditInstruction<&str> {
 
     /// This is technically different from using the ToOwned trait because I couldn't get the Borrow<>
     /// counterpart to work out.
-    fn to_owned(&self) -> EditInstruction<String> {
+    pub fn to_owned(&self) -> EditInstruction<String> {
         match self {
             EditInstruction::Insertion(s) => EditInstruction::Insertion(s.to_string()),
             EditInstruction::Deletion(s) => EditInstruction::Deletion(s.to_string()),
@@ -182,7 +182,7 @@ impl EditInstruction<&str> {
 }
 
 impl EditScript<&str> {
-    fn to_owned(&self) -> EditScript<String> {
+    pub fn to_owned(&self) -> EditScript<String> {
         EditScript {
             distance: self.distance,
             mode: self.mode,
@@ -193,7 +193,7 @@ impl EditScript<&str> {
 
 
 impl EditInstruction<String> {
-    fn as_ref(&self) -> EditInstruction<&str> {
+    pub fn as_ref(&self) -> EditInstruction<&str> {
         match self {
             EditInstruction::Insertion(s) => EditInstruction::Insertion(s.as_str()),
             EditInstruction::Deletion(s) => EditInstruction::Deletion(s.as_str()),
@@ -207,7 +207,7 @@ impl EditInstruction<String> {
 }
 
 impl EditScript<String> {
-    fn as_ref(&self) -> EditScript<&str> {
+    pub fn as_ref(&self) -> EditScript<&str> {
         EditScript {
             distance: self.distance,
             mode: self.mode,
@@ -380,7 +380,7 @@ impl ApplyEditScript for EditScript<String> {
 }
 
 ///auxiliary internal function for apply_to() in normal/prefix mode
-fn instruction_applies(instructioncontent: &str, input: &str, head: &Option<String>, tail: &Option<String>, tailchars: usize) -> Result<usize,ApplyError> {
+fn instruction_applies(instructioncontent: &str, input: &str, tail: &Option<String>, tailchars: usize) -> Result<usize,ApplyError> {
     let instructionlength = instructioncontent.chars().count();
     if instructionlength > tailchars {
         return Err(ApplyError::NoMatch);
@@ -526,8 +526,8 @@ impl ApplyEditScript for EditScript<&str> {
 
             //we use Options because we want to defer making clones and new instances until we
             //really need to
-            let mut tail: Option<String> = Some(input.to_string());
-            let mut head: Option<String> = Some(String::new());
+            let mut tail: Option<String> = None;
+            let mut head: Option<String> = None;
 
             let mut matches = false;
 
@@ -542,7 +542,7 @@ impl ApplyEditScript for EditScript<&str> {
                 eprintln!("              Tail: {}", tail);*/
                 match instruction {
                     EditInstruction::Deletion(prefix) => {
-                        match instruction_applies(prefix, input, &head, &tail, tailchars) {
+                        match instruction_applies(prefix, input, &tail, tailchars) {
                             Ok(matchchars) => {
                                 matches = true;
                                 if tail.is_none() { tail = Some(input.to_string()) }; //clone
@@ -569,7 +569,7 @@ impl ApplyEditScript for EditScript<&str> {
                         } else { panic!("Can't unpack head and tail for EditInstruction::GenericIdentity") } //should never happen
                     },
                     EditInstruction::Identity(prefix) => {
-                        match instruction_applies(prefix, input, &head, &tail, tailchars) {
+                        match instruction_applies(prefix, input, &tail, tailchars) {
                             Ok(matchchars) => {
                                 if head.is_none() { head = Some(String::new()) }; //init
                                 if tail.is_none() { tail = Some(input.to_string()) }; //clone
@@ -583,7 +583,7 @@ impl ApplyEditScript for EditScript<&str> {
                     },
                     EditInstruction::IdentityOptions(prefixes) => {
                         for prefix in prefixes {
-                            if let Ok(matchchars) = instruction_applies(prefix, input, &head, &tail, tailchars) {
+                            if let Ok(matchchars) = instruction_applies(prefix, input, &tail, tailchars) {
                                 if head.is_none() { head = Some(String::new()) }; //init
                                 if tail.is_none() { tail = Some(input.to_string()) }; //clone
                                 if let (Some(head), Some(tail)) = (head.as_mut(), tail.as_mut())  {
@@ -596,7 +596,7 @@ impl ApplyEditScript for EditScript<&str> {
                     }
                     EditInstruction::DeletionOptions(prefixes) => {
                         for prefix in prefixes {
-                            if let Ok(matchchars) = instruction_applies(prefix, input, &head, &tail, tailchars) {
+                            if let Ok(matchchars) = instruction_applies(prefix, input, &tail, tailchars) {
                                 if tail.is_none() { tail = Some(input.to_string()) }; //clone
                                 tail.as_mut().map(|t| t.drain(..matchchars));
                                 matches = true;

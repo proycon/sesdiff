@@ -92,13 +92,13 @@ fn test0008_apply() {
 
 #[test]
 fn test0009_apply_suffix() {
-    let mut editscript: EditScript<String> = EditScript::from_str("-[on]").unwrap();
+    let editscript: EditScript<String> = EditScript::from_str("-[on]").unwrap();
     assert_eq!(format!("{}",editscript.apply_to("hablaron", Some(Mode::Suffix)).unwrap() ),"hablar");
 }
 
 #[test]
 fn test0010_apply_suffix2() {
-    let mut editscript: EditScript<String> = EditScript::from_str("-[eron]+[r]=[#2]-[i]+[e]").unwrap();
+    let editscript: EditScript<String> = EditScript::from_str("-[eron]+[r]=[#2]-[i]+[e]").unwrap();
     assert_eq!(format!("{}",editscript.apply_to("pidieron", Some(Mode::Suffix)).unwrap() ),"pedir");
 }
 
