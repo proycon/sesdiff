@@ -1,0 +1,36 @@
+[package]
+name = "sesdiff-python"
+version = "0.3.1"
+authors = ["Maarten van Gompel <proycon@anaproy.nl>"]
+description = "Generates a shortest edit script (Myers' diff algorithm) to indicate how to get from the strings in column A to the strings in column B. Also provides the edit distance (levenshtein). This is the Python binding."
+homepage = "https://github.com/proycon/sesdiff/"
+repository = "https://github.com/proycon/sesdiff"
+documentation = "https://docs.rs/sesdiff"
+categories = ["science","text-processing", "command-line-utilities"]
+keywords = ["nlp","text-processing","lemmatization","linguistics"]
+license = "GPL-3.0+"
+readme = "README.md"
+edition = "2018"
+
+[lib]
+name = "sesdiff"
+crate-type = ["cdylib"]
+
+[dependencies]
+sesdiff = "0.3.0"
+pyo3 = "0.22.3"
+
+[features]
+default = ["pyo3/extension-module"]
+
+[target.x86_64-apple-darwin]
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]
+
+[target.aarch64-apple-darwin]
+rustflags = [
+  "-C", "link-arg=-undefined",
+  "-C", "link-arg=dynamic_lookup",
+]

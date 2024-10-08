@@ -1,9 +1,9 @@
 extern crate clap;
 extern crate dissimilar;
 
+use clap::{App, Arg};
 use std::io::BufRead;
 use std::str::FromStr;
-use clap::{Arg, App};
 
 use sesdiff::*;
 
@@ -23,10 +23,9 @@ pub fn printeditstringlength(s: &str, op: char, suffix: bool) {
     }
 }
 
-
 fn main() {
     let args = App::new("sesdiff")
-        .version("0.3.0") //also adapt in cargo.toml
+        .version("0.3.1") //also adapt in cargo.toml
         .author("Maarten van Gompel (proycon) <proycon@anaproy.nl>")
         .about("Generates a shortest edit script (Myers' diff algorithm) to indicate how to get from the strings in column 1 to the strings in column 2. Also provides the edit distance.")
         //snippet hints --> addargb,addargs,addargi,addargf,addargpos
@@ -80,32 +79,44 @@ fn main() {
                 print!("{}\t{}\t", fields[0], fields[1]);
                 if args.is_present("apply") {
                     match EditScript::<String>::from_str(&fields[1]) {
-                        Ok(editscript)  => {
-                            match editscript.apply_to(&fields[0], Some(mode)) {
-                                Ok(result) => print!("\t{}", result),
-                                Err(err) => eprintln!("ERROR: {:?}", err)
-                           }
+                        Ok(editscript) => match editscript.apply_to(&fields[0], Some(mode)) {
+                            Ok(result) => print!("\t{}", result),
+                            Err(err) => eprintln!("ERROR: {:?}", err),
                         },
-                        Err(err) => eprintln!("ERROR: {:?}", err)
+                        Err(err) => eprintln!("ERROR: {:?}", err),
                     }
                 } else {
                     if mode == Mode::Suffix {
-                        let editscript = shortest_edit_script_suffix(&fields[0], &fields[1], args.is_present("abstract"), !args.is_present("nosubstitutions"));
-                        print!("\t{}\t{}",editscript, editscript.distance);
+                        let editscript = shortest_edit_script_suffix(
+                            &fields[0],
+                            &fields[1],
+                            args.is_present("abstract"),
+                            !args.is_present("nosubstitutions"),
+                        );
+                        print!("\t{}\t{}", editscript, editscript.distance);
                     } else {
-                        let editscript = shortest_edit_script(&fields[0], &fields[1], args.is_present("prefix"), args.is_present("abstract"), !args.is_present("nosubstitutions"));
-                        print!("\t{}\t{}",editscript, editscript.distance);
+                        let editscript = shortest_edit_script(
+                            &fields[0],
+                            &fields[1],
+                            args.is_present("prefix"),
+                            args.is_present("abstract"),
+                            !args.is_present("nosubstitutions"),
+                        );
+                        print!("\t{}\t{}", editscript, editscript.distance);
                     }
                 }
                 if fields.len() >= 2 {
                     //retain the rest of the input columns as well
                     for j in 2..fields.len() {
-                        print!("\t{}",fields[j]);
+                        print!("\t{}", fields[j]);
                     }
                 }
                 println!();
             } else {
-                eprintln!("Unable to process line {}, expected two tab-separated columns", i+1);
+                eprintln!(
+                    "Unable to process line {}, expected two tab-separated columns",
+                    i + 1
+                );
             }
         }
     }
