@@ -1,9 +1,7 @@
-use pyo3::exceptions::{PyIndexError, PyRuntimeError, PyValueError};
+use ::sesdiff::{EditInstruction, EditScript, Mode};
+use pyo3::basic::CompareOp;
+use pyo3::exceptions::{PyIndexError, PyRuntimeError};
 use pyo3::prelude::*;
-use pyo3::types::*;
-use sesdiff::{
-    shortest_edit_script, shortest_edit_script_suffix, EditInstruction, EditScript, Mode,
-};
 
 #[pyclass]
 #[pyo3(name = "Mode")]
@@ -36,7 +34,7 @@ impl PyMode {
 
 #[pyclass]
 #[pyo3(name = "EditScript")]
-#[derive(Clone, PartialEq, Default)]
+#[derive(Clone, PartialEq)]
 struct PyEditScript {
     inner: EditScript<String>,
 }
@@ -56,11 +54,16 @@ impl PyEditScript {
     }
 
     fn __getitem__(&self, index: isize) -> PyResult<(char, String)> {
-        if let Some(instruction) = self.inner.instructions.get(&index) {
+        let instruction: Option<&EditInstruction<String>> =
+            self.inner.instructions.get(index as usize);
+        if let Some(instruction) = instruction {
             match instruction {
-                EditInstruction::Identify(s) => Ok(('=', s)),
-                EditInstruction::Insertion(s) => Ok(('+', s)),
-                EditInstruction::Deletion(s) => Ok(('-', s)),
+                EditInstruction::Identity(s) => Ok(('=', s.to_string())),
+                EditInstruction::Insertion(s) => Ok(('+', s.to_string())),
+                EditInstruction::Deletion(s) => Ok(('-', s.to_string())),
+                _ => Err(PyRuntimeError::new_err(
+                    "EditInstructions with multiple items are not implemented in the python binding yet",
+                )),
             }
         } else {
             Err(PyIndexError::new_err("Index out of range for EditScript"))
@@ -68,28 +71,34 @@ impl PyEditScript {
     }
 }
 
-#[pymethods]
 #[pyfunction]
 #[pyo3(name = "shortest_edit_script")]
+#[pyo3(signature = (source, target, mode=PyMode(Mode::Normal), allow_substitutions=true))]
 fn shortest_edit_script_py(
     source: &str,
     target: &str,
     mode: PyMode,
-    prefix: bool,
-    generic: bool,
     allow_substitutions: bool,
 ) -> PyResult<PyEditScript> {
-    if mode.0 == Mode::Suffix {
-        ::sesdiff::shortest_edit_script_suffix()
+    let editscript = if mode.0 == Mode::Suffix {
+        ::sesdiff::shortest_edit_script_suffix(source, target, false, allow_substitutions)
     } else {
-        ::sesdiff::shortest_edit_script_suffix()
-    }
+        ::sesdiff::shortest_edit_script(
+            source,
+            target,
+            mode.0 == Mode::Prefix,
+            false,
+            allow_substitutions,
+        )
+        .to_owned()
+    };
+    Ok(PyEditScript { inner: editscript })
 }
 
 #[pymodule]
 fn sesdiff(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class(wrap_pyclass!(PyMode, m));
-    m.add_class(wrap_pyclass!(PyEditScript, m));
-    m.add_function(wrap_pyfunction!(shortest_edit_script_py, m)?);
+    m.add_class::<PyMode>()?;
+    m.add_class::<PyEditScript>()?;
+    m.add_function(wrap_pyfunction!(shortest_edit_script_py, m)?)?;
     Ok(())
 }

@@ -15,14 +15,14 @@ pub enum ApplyError {
     WithMessage(String),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EditScript<T> {
     pub mode: Mode,
     pub distance: u32,
     pub instructions: Vec<EditInstruction<T>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EditInstruction<T> {
     /// An insertion
     Insertion(T),
@@ -286,6 +286,12 @@ pub enum Mode {
     ///Infix mode is only used when applying an edit script and means it can apply to any subpart (infix) of
     ///the string and may also apply multiple times.
     Infix,
+}
+
+impl Default for Mode {
+    fn default() -> Self {
+        Self::Normal
+    }
 }
 
 /// Compute the shorted edit script (Myers' diff) between source and target

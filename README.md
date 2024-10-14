@@ -7,7 +7,10 @@
 
 ## Description
 
-This is a small and fast command line tool and Rust library that reads a two-column tab separated input from standard input and computes the shortest edit script (Myers' diff algorithm) to go from the string in column A to the string in column B. It also computed the edit distance (aka levenshtein distance).
+This is a small and fast command line tool and Rust library that reads a two-column tab separated input from standard input and computes the shortest edit script (Myers' diff algorithm) to go from the string in column A to the string in column B. It also computes the edit distance (aka levenshtein distance).
+
+There is also a [python binding](python/) available if you want to use sesdiff
+from Python. The documentation here covers the command-line version.
 
 It was written to build lemmatisers.
 
@@ -68,6 +71,7 @@ rather than their contents. You would then get:
 ```
 pidieron        pedir           -[eron]+[r]=[#2]-[i]+[e]   6
 ```
+
 Sesdiff can also apply edit scripts to our input, use the ``--apply`` flag and feed the tool tab separated input with
 a string in the first column and an edit script in the second, as in the the following example ``input2.tsv``:
 
@@ -109,4 +113,3 @@ hihaho       -[a|i|o]+[e]	hehehe
 # License
 
 GNU General Public Licence v3
-

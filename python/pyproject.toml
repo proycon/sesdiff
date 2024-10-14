@@ -1,0 +1,9 @@
+[project]
+name = "sesdiff"
+
+[project.optional-dependencies]
+test = [ "pytest" ]
+
+[build-system]
+requires = ["maturin>=1.0.1"]
+build-backend = "maturin"
