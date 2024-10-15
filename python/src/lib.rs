@@ -69,6 +69,10 @@ impl PyEditScript {
             Err(PyIndexError::new_err("Index out of range for EditScript"))
         }
     }
+
+    fn __str__(&self) -> String {
+        format!("{}", self.inner)
+    }
 }
 
 #[pyfunction]

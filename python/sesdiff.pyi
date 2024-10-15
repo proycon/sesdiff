@@ -14,6 +14,9 @@ class EditScript:
     def mode(self) -> Mode:
         """Returns the edit mode"""
 
+    def __str__(self) -> str:
+        """Returns a string representation of the script"""
+
 class Mode:
     """An enumeration of possible edit modes"""
 

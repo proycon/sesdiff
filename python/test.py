@@ -7,6 +7,7 @@ from sesdiff import shortest_edit_script, Mode
 class Tests(unittest.TestCase):
     def test_normal(self):
         result = shortest_edit_script("hablaron","hablar")
+        print(result)
         self.assertEqual(result.distance(),2)
         self.assertEqual(len(result),2)
         self.assertEqual(result[0], ('=',"hablar"))
