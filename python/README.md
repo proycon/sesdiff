@@ -28,12 +28,13 @@ from sesdiff import shortest_edit_script, Mode
 
 #normal mode
 result = shortest_edit_script("hablaron","hablar")
+print(result)
 assert result.distance() == 2
 assert len(result) == 2 
 assert result[0] == ('=',"hablar")
 assert result[1] == ('-',"on")
 
-#print all instructions
+#print all instructions manually
 for instruction in result:
     print(instruction)
 
